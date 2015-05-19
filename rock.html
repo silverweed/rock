@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Rock Interpreter</title>
+        <style>
+        body {
+            overflow: hidden;
+            margin: 1px;
+            text-align: center;
+        }
+        #wrapper {
+            margin: auto;
+        }
+        #code {
+            width: 45%;
+            height: 700px;
+            float: left;
+            font-family: monospace;
+        }
+        #output {
+            float: left;
+            width: 50%;
+            height: 700px;
+            border: 1px dotted blue;
+            overflow: auto;
+            text-align: left;
+            font-size: small;
+        }
+        p {
+            margin: 1px 2px;
+        }
+        p.err {
+            color: #ff6666;
+        }
+        p.debug {
+            color: #777;
+        }
+        </style>
+        <script src='rock.js'></script>
+    </head>
+    <body>
+        <h1>Try Rock!</h1>
+        <div id='wrapper'>
+            <textarea id='code'></textarea>
+            <div id='output'></div>
+            <button onclick='exe()'>Execute</button>
+            <button onclick='clearOut()'>Clear</button>
+            <input onchange='verbAdj()' type='range' min="0" max="3" id='verb'/>
+            <label for='verb' id='verblb'>Verbosity: 0</label>
+        </div>
+        <script>
+        var $code = document.getElementById('code');
+        var $out = document.getElementById('output');
+        var verb = document.getElementById('verb');
+        var verblb = document.getElementById('verblb');
+        function exe() {
+            clearOut();
+            executeRock($code.value);
+        }
+        function clearAll() {
+            clearCode();
+            clearOut();
+        }
+        function clearOut() {
+            $out.innerHTML = "";
+        }
+        function clearCode() {
+            $code.value = "";
+        }
+        function verbAdj() {
+            $debuglv = verb.value;
+            verblb.innerHTML = "Verbosity: " + $debuglv;
+        }
+        </script>
+    </body>
+</html>
