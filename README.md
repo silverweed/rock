@@ -10,27 +10,33 @@ The two interpreters are equipotent, and both implement the language specs v 1.0
 ## Language specs ##
 A Rock program is made by a series of lines and labels, like assembly.
 A line may only consist of:
-*  a label:
-    ```mylabel:```
+
+*  a label: `mylabel:`
+
 *  a var definition:
-    ```myvar := expr```
+`myvar := expr`
+
 *  a var reassign:
-    ```myvar = expr```
+`myvar = expr`
+
 *  a jump directive:
-    ```jump label
+```jump label
     OR
     jump #lineno
     OR
     jump @varname (varname must contain the lineno)```
+
 *  a conditional jump directive:
     ```jumpif label expr
     OR
     jumpif #lineno expr
     OR
     jump @varname expr (varname must contain the lineno)```
+
 *  a call directive (like jump, but fills variable $ra with lineno+1, used
    for 'function' calls)
     ```call label```
+
 *  a builtin statement:  
     - ```say expr```
 
