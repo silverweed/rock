@@ -46,7 +46,30 @@ STD_CONTEXT =
 	'true': true
 	'false': false
 	'nil': null
-_context = STD_CONTEXT
+
+_context = [STD_CONTEXT]
+
+ctx = ->
+	_context[_context.length-1]
+
+getvar = (x) ->
+	for i in [_context.length-1..0]
+		if _context[i].hasOwnProperty x
+			debug "Found variable #{x} in context ##{i}"
+			return _context[i][x]
+	return undefined
+
+setvar = (x, val, overwrite_outer_scope = false) ->
+	if overwrite_outer_scope
+		for i in [_context.length-1..0]
+			if _context[i].hasOwnProperty x
+				_context[i][x] = val
+				debug "Assigned var #{x} = #{val} in context ##{i}", 2
+				return
+		err "Variable #{x} not found in any context!"
+	else
+		ctx()[x] = val
+		debug "Assigned variable #{x} = #{val} in context ##{_context.length-1}", 2
 
 # current lineno (lines start at 1)
 _lineno = 1
@@ -54,7 +77,7 @@ _lineno = 1
 reset_program = ->
 	_program = []
 	_labels = {}
-	_context = STD_CONTEXT
+	_context = [STD_CONTEXT]
 	_lineno = 1
 
 # reads the whole program in a table { lineno: line }
@@ -91,7 +114,7 @@ execute_line = (lineno, line) ->
 		if fstch == '#'
 			return tonumber tok[1][1..]
 		if fstch == '@'
-			return _context[tok[1][1..]]
+			return getvar tok[1][1..]
 		if _labels[tok[1]] == undefined
 			err "Label #{tok[1]} not found!"
 			return
@@ -105,7 +128,7 @@ execute_line = (lineno, line) ->
 		if fstch == '#'
 			labelno = tonumber tok[1][1..]
 		else if fstch == '@'
-			labelno = _context[tok[1][1..]]
+			labelno = getvar tok[1][1..]
 		else
 			if _labels[tok[1]] == undefined
 				err "Label #{tok[1]} not found!"
@@ -125,14 +148,26 @@ execute_line = (lineno, line) ->
 		if _labels[tok[1]] == undefined
 			err "Label #{tok[1]} not found!"
 			return
-		_context['$ra'] = lineno + 1
+		setvar '$ra', lineno + 1
+		# create new context
+		_context.push {}
+		debug "Creating new context. Current context chain length: #{_context.length}"
 		return _labels[tok[1]]
 
 	if fst == 'del'
 		# delete variable (del a)
-		_context[tok[1]] = undefined
+		setvar tok[1], undefined, true
 		debug "Deleted variable #{tok[1]} from context"
 		return lineno + 1
+	
+	if fst == 'return'
+		# delete inmost context
+		_context.pop()
+		debug "Destroying local context. Current context chain length: #{_context.length}"
+		if getvar('$ra') == undefined
+			err "No return address in current context!"
+			return
+		return getvar '$ra'
 
 	if fst == 'die'
 		return -1
@@ -143,17 +178,17 @@ execute_line = (lineno, line) ->
 
 	if tok[1] == '='
 		# var (re)assign (a = expr)
-		if _context[fst] == undefined
+		if getvar(fst) == undefined
 			err "Variable #{fst} not in context!"
 			return
-		_context[fst] = evaluate tok[2..]
-		debug "Var reassign: #{fst} = #{_context[fst]}"
+		setvar fst, evaluate(tok[2..]), true
+		debug "Var reassign: #{fst} = #{getvar fst}"
 		return lineno + 1
 
 	if tok[1] == ':='
 		#var first assign (a := expr) - may shadow a pre-existing variable
-		_context[fst] = evaluate tok[2..]
-		debug "Var define: #{fst} := #{_context[fst]}"
+		setvar fst, evaluate tok[2..]
+		debug "Var define: #{fst} := #{getvar fst}"
 		return lineno + 1
 	
 	err "[aborted] Invalid line: #{line} @ #{lineno}"
@@ -164,7 +199,7 @@ get = (name) ->
 	a = parseFloat name
 	if a == a
 		return a
-	return _context[name] # may be nil
+	return getvar name # may be nil
 
 # evaluates a series of tokens, which may be:
 # var1 (arith-op) var2
@@ -180,7 +215,7 @@ evaluate = (toks) ->
 	# builtin
 	switch toks[0]
 		when '?'
-			return _context[toks[1]] != undefined
+			return getvar(toks[1]) != undefined
 		when 'floor'
 			return Math.floor get toks[1]
 
