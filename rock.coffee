@@ -263,7 +263,7 @@ get = (name) ->
 	return a if a == a # a is not NaN => a is number
 	m = name.match /([^\[]+)\[(.+)\]/
 	if m
-		debug "m: #{m} (1: #{m[1]}, 2: #{m[2]})", 0
+		debug "m: #{m} (1: #{m[1]}, 2: #{m[2]})", 2
 		v = getvar m[1]
 		if v instanceof Array or typeof v is 'string'
 			return v[get m[2]]
