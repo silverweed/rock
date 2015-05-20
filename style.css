@@ -30,6 +30,7 @@ h4 {
 }
 
 #buttons {
+	z-index: 10;
 	position: absolute;
 	left: 0;
 	height: 100%;
