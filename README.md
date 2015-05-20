@@ -50,7 +50,7 @@ where expr may be:
 *  operand1 (op) operand2
 *  a builtin expr (like `? var`)
 
-(For the list of binary operators available, [look here](https://github.com/silverweed/rock/blob/master/rock.coffee#L195))
+(For the list of binary operators available, [look here](https://github.com/silverweed/rock/blob/master/rock.coffee#L277))
 
 #### Notes ####
 * The scope is made up by a chain of contexts, having the standard context as a root.
