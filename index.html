@@ -20,7 +20,45 @@
         </div>
         <div id='wrapper'>
             <div id='codewrapper'>
-                <textarea id='code' spellcheck='false'></textarea>
+                <textarea id='code' spellcheck='false'>
+-- Example Rock program
+-- Print all primes up to limit.
+
+limit := 1000
+i := 2
+p := " is prime
+
+-- main loop
+loop:
+    call is_prime i
+    jumpif noprint $res is False
+    say i .. p
+noprint:
+    jumpif end i == limit
+    i = i + 1
+    jump loop
+end:
+    die
+
+-- returns true if n is prime, false otherwise.
+is_prime: n
+    -- square root of n
+    jumpif is_prime_true n is 2
+    lim := n ^ 0.5
+    lim = floor lim
+    lim = lim + 1
+    i := 2
+is_prime_loop:
+    tmp := n % i
+    jumpif is_prime_false tmp is 0
+    jumpif is_prime_true i == lim
+    i = i + 1
+    jump is_prime_loop
+is_prime_false:
+    return False
+is_prime_true:
+    return True
+                </textarea>
             </div>
             <div id='output'></div>
         </div>
