@@ -84,11 +84,11 @@ The local scope allows the functions to be recursive with no problems:
 ```
 -- factorial recursive function
 fact: n
-  jumpif fact\_base n is 1
+  jumpif fact_base n is 1
   m := n - 1
   call fact m
   return $res * n
-fact\_base:
+fact_base:
   return 1
 ```
 
