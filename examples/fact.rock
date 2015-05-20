@@ -1,0 +1,12 @@
+-- Recursive factorial function
+call fact 6
+say $res
+die
+
+fact: n
+	jumpif fact_base n is 1
+	m := n - 1
+	call fact m
+	return $res * n
+fact_base:
+	return 1

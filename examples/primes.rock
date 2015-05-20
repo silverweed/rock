@@ -1,33 +1,14 @@
--- Example ROCK program
+-- Example Rock program
 -- Print all primes up to limit.
--- Note: the function calling convention is that:
--- 1- arguments are passed via the $arg, $arg2, ... variables.
--- 2- return values are passed via the $res, $res2, ... variables.
--- 3- all those variables must be declared by the callee.
--- 4- internally, all functions use labels with names prefixed by
---    function_name_*
--- 5- internally, all functions call variables with a leading _.
---    This means that all variables starting with a _ should be considered
---    clobber-able by any function call.
--- 6- a function should NOT clobber any variable not starting with
---    a _ which isn't an $arg or a $res it required.
--- 7- a function should NOT redefine $arg and $res, but only reassign
---    them with '=' (this in order to avoid typos etc)
--- It's good norm that all required $arg, $res, etc are declared on top
--- of the main.
 
 limit := 1000
 i := 2
 p := " is prime
--- these are used to communicates with subroutines
-$arg := 0
-$res := 0
 
 -- main loop
 loop:
-	$arg = i
-	call is_prime
-	jumpif noprint $res is false
+	call is_prime i
+	jumpif noprint $res is False
 	say i .. p
 noprint:
 	jumpif end i == limit
@@ -36,26 +17,21 @@ noprint:
 end:
 	die
 
--- is_prime calculates whether the number contained
--- in $arg is prime and returns a bool value in $res.
-is_prime:
-	-- square root of $arg
-	jumpif is_prime_true $arg is 2
-	_lim := $arg ^ 0.5
-	_lim = floor _lim
-	_lim = _lim + 1
-	_i := 2
+-- returns true if n is prime, false otherwise.
+is_prime: n
+	-- square root of n
+	jumpif is_prime_true n is 2
+	lim := n ^ 0.5
+	lim = floor lim
+	lim = lim + 1
+	i := 2
 is_prime_loop:
-	_tmp := $arg % _i
-	jumpif is_prime_false _tmp is 0
-	jumpif is_prime_true _i == _lim
-	_i = _i + 1
+	tmp := n % i
+	jumpif is_prime_false tmp is 0
+	jumpif is_prime_true i == lim
+	i = i + 1
 	jump is_prime_loop
 is_prime_false:
-	$res = false
-	jump is_prime_end
+	return False
 is_prime_true:
-	$res = true
-is_prime_end:
-	-- back to the callee
-	jump @$ra 
+	return True

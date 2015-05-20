@@ -3,11 +3,12 @@ The Rock programming language
 
 Rock is a very simple and minimal programming language with assembly-like syntax.
 
-There are currently 2 Rock interpreters: the [original one](https://gist.github.com/silverweed/6a1abee2ae421fb65b60#file-rock-moon), written in MoonScript, and the one hosted in this repository, which is a translation of the first in CoffeeScript (in order to be usable from a browser).
+There are currently 2 Rock interpreters: the [original one](https://gist.github.com/silverweed/6a1abee2ae421fb65b60#file-rock-moon), written in MoonScript, and the one hosted in this repository, which was born as a translation of the first in CoffeeScript (in order to be usable from a browser).
 
-The two interpreters are equipotent, and both implement the language specs v 1.0 (see below).
+Currently, the MoonScript interpreter implements the old language specs, while the CoffeeScript
+one is being updated to the new ones.
 
-## Language specs ##
+## Language specs (latest, unstable) ##
 A Rock program is made by a series of lines and labels, like assembly.
 A line may only consist of:
 
@@ -33,9 +34,11 @@ A line may only consist of:
     OR
     jump @varname expr (varname must contain the lineno)```
 
-*  a call directive (like jump, but fills variable $ra with lineno+1, used
-   for 'function' calls)
+*  a call directive (like jump, but used for function calls)
     ```call label```
+
+* a return directive (must be used from a function)
+    ```return expr```
 
 *  a builtin statement:  
     - ```say expr```
@@ -50,7 +53,8 @@ where expr may be:
 (For the list of binary operators available, [look here](https://github.com/silverweed/rock/blob/master/rock.coffee#L195))
 
 #### Notes ####
-* The scope (context) is global, there are no local variables or such.
+* The scope is made up by a chain of contexts, having the standard context as a root.
+  A new context is created whenever a `call` is made and destroyed upon a `return`.
 
 * The default context contains the 'true', 'false', and 'nil' variables
 (which may be reassigned and are not treated specially)
@@ -58,26 +62,48 @@ where expr may be:
 * Variable definitions `a := x` *can* overwrite previously defined variables.
   Variable assignments, on the other hand, require the variable to exist.
 
-### Conventions ###
-In Rock, functions are just labeled snippets of code, and have no local
-scope.
+* Variables starting with an Uppercase letter are constants and cannot be
+  reassigned (but may be shadowed via `:=`)
 
-The function calling convention (not enforced by the language) is the following:
+### Functions ###
+Functions are special labels which may have one or more named parameters, like:  
+```factorial: n```
 
-1. a function is called via `call function_name`, not `jump`
-2. arguments are passed via the $arg, $arg2, ... variables.
-3. return values are passed via the $res, $res2, ... variables.
-4. all those variables must be declared by the callee.
-5. internally, all functions use labels with names prefixed by
-   function_name_*
-6. internally, all functions call variables with a leading _.
-   This means that all variables starting with a _ should be considered
-   clobber-able by any function call.
-7. a function should NOT clobber any variable not starting with
-   a _ which isn't an $arg or a $res it required.
-8. a function should NOT redefine $arg and $res, but only reassign
-   them with '=' (this in order to avoid typos etc)
-9. a function must end with a `jump @$ra` instruction to return to the callee.
+A function must be called via `call <functionname> [list of parameters]`, like:  
+```call factorial 5```
 
-It's good norm that all required $arg, $res, etc are declared on top
-of the main.
+Upon calling the function, the `$ra` internal variable is filled with `lineno+1`,
+which allows the function to return to the place where it was called from after
+a `return`.
+
+A `return` statement (which MUST terminate the function) may specify an expression
+which will become the return value of the function. This value will be available
+in the `$res` special variable in the outer scope of the function after it returns.
+
+The local scope allows the functions to be recursive with no problems:
+```
+-- factorial recursive function
+fact: n
+  jumpif fact\_base n is 1
+  m := n - 1
+  call fact m
+  return $res * n
+fact\_base:
+  return 1
+```
+
+The naming convention for the labels (not enforced by the language) is the following:
+
+* internally, all functions use labels with names prefixed by
+  function_name_*
+
+This reduces the possibility of name clashing with the labels.
+
+### Meta statements ###
+The language allows to insert meta-statements which modify the interpreter's behaviour.
+
+The meta-statements currently recognized are:
+
+1. #limit <cycle number>: sets the max number of cycles the interpreter will attempt
+   to perform (e.g. `#limit 100000`)
+2. #debug <debuglv>: sets the debug level (e.g. `#debug 3`)
