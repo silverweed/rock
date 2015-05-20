@@ -46,6 +46,7 @@ A line may only consist of:
 where expr may be:  
 *  number (integer or floating)
 *  "string
+*  [val1 val2 ... (array)
 *  variable name
 *  operand1 (op) operand2
 *  a builtin expr (like `? var`)
@@ -64,6 +65,9 @@ where expr may be:
 
 * Variables starting with an Uppercase letter are constants and cannot be
   reassigned (but may be shadowed via `:=`)
+
+* Arrays can be referenced via `array[index]`; elements can be reassigned via
+  `array[index] = expr`. Arrays can contain mixed values: `a := [1 "two" 3`
 
 ### Functions ###
 Functions are special labels which may have one or more named parameters, like:  

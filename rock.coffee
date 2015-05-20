@@ -222,17 +222,32 @@ execute_line = (lineno, line) ->
 
 	if tok[1] == '='
 		# var (re)assign (a = expr)
-		if getvar(fst) == undefined
-			err "Variable #{fst} not in context!"
-			return
-		setvar fst, evaluate tok[2..]
-		debug "Var reassign: #{fst} = #{getvar fst}"
+		# check if array assignment
+		m = fst.match /([^\[]+)\[(.+)\]/
+		if m
+			v = getvar m[1]
+			if v instanceof Array
+				i = get m[2]
+				val = evaluate tok[2..]
+				v[i] = val
+				debug "Var reassign: #{m[1]}[#{i}] = #{val}"
+			else
+				err "Variable #{m[1]} is not an array, but a #{typeof v}!"
+				return
+		else
+			if getvar(fst) == undefined
+				err "Variable #{fst} not in context!"
+				return
+			val = evaluate tok[2..]
+			setvar fst, val
+			debug "Var reassign: #{fst} = #{val}"
 		return lineno + 1
 
 	if tok[1] == ':='
 		#var first assign (a := expr) - may shadow a pre-existing variable
-		setvar fst, evaluate(tok[2..]), true
-		debug "Var define: #{fst} := #{getvar fst}"
+		val = evaluate tok[2..]
+		setvar fst, val, true
+		debug "Var define: #{fst} := #{val}"
 		return lineno + 1
 	
 	err "[aborted] Invalid line: #{line} @ #{lineno}"
@@ -246,6 +261,15 @@ execute_line = (lineno, line) ->
 get = (name) ->
 	a = parseFloat name
 	return a if a == a # a is not NaN => a is number
+	m = name.match /([^\[]+)\[(.+)\]/
+	if m
+		debug "m: #{m} (1: #{m[1]}, 2: #{m[2]})", 0
+		v = getvar m[1]
+		if v instanceof Array or typeof v is 'string'
+			return v[get m[2]]
+		else
+			err "Variable #{v} is not an array or string, but a #{typeof v}!"
+			return
 	return getvar name # return variable - may be nil
 
 # evaluates a series of tokens, which may be:
@@ -258,6 +282,11 @@ evaluate = (toks) ->
 	if toks[0][0] == '"'
 		toks[0] = toks[0][1..]
 		return toks.join ' '
+
+	# array
+	if toks[0][0] == '['
+		toks[0] = toks[0][1..]
+		return toks
 	
 	# builtin
 	switch toks[0]
