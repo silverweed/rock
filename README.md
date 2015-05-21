@@ -51,7 +51,12 @@ where expr may be:
 *  operand1 (op) operand2
 *  a builtin expr (like `? var`)
 
-(For the list of binary operators available, [look here](https://github.com/silverweed/rock/blob/master/rock.coffee#L277))
+For the list of binary operators available, look to the code; they're all the 'usual'
+operators, but beware that:
+
+* `<>` is the inequality check operator
+* `..` is the concatenation operator (coerces operands to string)
+* `^` is the elevating-to-power operator.
 
 #### Notes ####
 * The scope is made up by a chain of contexts, having the standard context as a root.
@@ -111,3 +116,16 @@ The meta-statements currently recognized are:
 1. #limit <cycle number>: sets the max number of cycles the interpreter will attempt
    to perform (e.g. `#limit 100000`)
 2. #debug <debuglv>: sets the debug level (e.g. `#debug 3`)
+
+### Builtin functions ###
+An expression may start with a builtin function call, which usually applies to all
+the following tokens: `builtin expr -- expr is evaluated before being fed to builtin`
+
+Currently, the available builtin are the following:
+
+* `len`: gives the length of an array or a string  
+* `floor`: floors the following number
+* `append`: takes the first argument and pushes all following ones into it;
+  first argument must be an array, and following ones may be numbers or variable names
+* `flatten`: recursively flattens an array (e.g. `flatten [[2],[3,[4]]] --> [2, 3, 4]`)
+* `not`: coerces to bool the following expression and returns its negation.
