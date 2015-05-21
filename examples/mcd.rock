@@ -1,0 +1,12 @@
+call mcd 8 6
+say $res
+die
+
+
+mcd: a b
+	r := a % b
+	jumpif mcd_base r is 0
+	call mcd b r
+	return $res
+mcd_base:
+	return b

@@ -225,10 +225,11 @@ execute_line = (lineno, line) ->
 
 	if fst == 'say'
 		expr = evaluate tok[1..]
-		if typeof expr is 'string'
-			print expr
-		else
-			print dump expr
+		switch typeof expr
+			when 'string', 'number'
+				print expr
+			else
+				print dump expr
 		return lineno + 1
 
 	if tok[1] == '='
@@ -403,7 +404,10 @@ evaluate = (toks) ->
 
 # utils
 htmlify = (str) ->
-	str.replace(/\n/g,'<br>').replace(/\t/g,'&emsp;').replace(/\s/g,'&nbsp;')
+	if str?.replace?
+		str.replace(/\n/g,'<br>').replace(/\t/g,'&emsp;').replace(/\s/g,'&nbsp;')
+	else
+		str
 
 err = (msg) ->
 	$out.innerHTML += "<p class='err'>[#{_lineno}] ERR: #{htmlify msg}</p>"
