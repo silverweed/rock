@@ -184,10 +184,17 @@ execute_line = (lineno, line) ->
 		setvar '$ra', lineno + 1, true
 		# create new context
 		_context.push {}
+		# bind call arguments to function's named parameters (if any)
+		params = {}
 		for i in [0...Math.min _labels[tok[1]].params.length, tok[2..].length]
-			# bind call arguments to function's named parameters (if any)
-			setvar _labels[tok[1]].params[i], get(tok[2+i]), true
-		debug "Creating new context. Current context chain length: #{_context.length}"
+			pname = _labels[tok[1]].params[i]
+			pval = get tok[2+i]
+			params[pname] = pval
+			setvar pname, pval, true
+		debug "Function call: #{tok[1]}(" +
+			"#{if Object.keys(params).length > 1 then '\n\t\t' else ''}" +
+			"#{("#{pn}=#{dump pv}: #{type pv}" for pn, pv of params).join '\n\t\t'})"
+		debug "Creating new context. Current context chain length: #{_context.length}", 2
 		return _labels[tok[1]].lineno
 
 	if fst == 'del'
@@ -204,7 +211,7 @@ execute_line = (lineno, line) ->
 		res = if tok.length > 1 then evaluate(tok[1..]) else undefined
 		# delete inmost context
 		_context.pop()
-		debug "Destroying local context. Current context chain length: #{_context.length}"
+		debug "Destroying local context. Current context chain length: #{_context.length}", 2
 		ra = getvar('$ra')
 		if ra == undefined
 			err "No return address in current context!"
@@ -217,7 +224,7 @@ execute_line = (lineno, line) ->
 		return -1
 
 	if fst == 'say'
-		print evaluate tok[1..]
+		print dump evaluate tok[1..]
 		return lineno + 1
 
 	if tok[1] == '='
@@ -230,9 +237,9 @@ execute_line = (lineno, line) ->
 				i = get m[2]
 				val = evaluate tok[2..]
 				v[i] = val
-				debug "Var reassign: #{m[1]}[#{i}] = #{val}"
+				debug "Var reassign: #{m[1]}[#{i}] = #{dump val}: #{type val}"
 			else
-				err "Variable #{m[1]} is not an array, but a #{typeof v}!"
+				err "Variable #{m[1]} is not an array, but a #{type v}!"
 				return
 		else
 			if getvar(fst) == undefined
@@ -240,14 +247,14 @@ execute_line = (lineno, line) ->
 				return
 			val = evaluate tok[2..]
 			setvar fst, val
-			debug "Var reassign: #{fst} = #{val}"
+			debug "Var reassign: #{fst} = #{dump val}: #{type val}"
 		return lineno + 1
 
 	if tok[1] == ':='
 		#var first assign (a := expr) - may shadow a pre-existing variable
 		val = evaluate tok[2..]
 		setvar fst, val, true
-		debug "Var define: #{fst} := #{val}"
+		debug "Var define: #{fst} := #{dump val}: #{type val}"
 		return lineno + 1
 	
 	err "[aborted] Invalid line: #{line} @ #{lineno}"
@@ -268,9 +275,24 @@ get = (name) ->
 		if v instanceof Array or typeof v is 'string'
 			return v[get m[2]]
 		else
-			err "Variable #{v} is not an array or string, but a #{typeof v}!"
+			err "Variable #{v} is not an array or string, but a #{type v}!"
 			return
 	return getvar name # return variable - may be nil
+
+type = (v) -> if v instanceof Array then 'array' else typeof v
+
+dump = (v) ->
+	s = ""
+	if v instanceof Array
+		s = "["
+		for el in v
+			s += "#{dump el}, "
+		s = s[0..-3]
+		s += "]"
+		return s
+	if typeof v is 'string'
+		return "'#{v}'"
+	return v
 
 # evaluates a series of tokens, which may be:
 # var1 (arith-op) var2
@@ -286,18 +308,56 @@ evaluate = (toks) ->
 	# array
 	if toks[0][0] == '['
 		toks[0] = toks[0][1..]
-		return toks
+		v = []
+		if toks.join('').length > 0
+			v.push(get tok) for tok in toks
+		return v
 	
 	# builtin
 	switch toks[0]
 		when '?'
-			return getvar(toks[1]) != undefined
+			return evaluate(toks[1..]) != undefined
 		when 'floor'
-			return Math.floor get toks[1]
+			return Math.floor evaluate toks[1..]
+		when 'len'
+			exp = evaluate toks[1..]
+			if exp?.length?
+				return exp.length
+			else
+				err "#{exp} has no 'len' attribute! (it's a #{type exp})"
+				return
+		when 'append'
+			v = get toks[1]
+			unless v instanceof Array
+				err "Cannot append to #{dump toks[1]}! (not an array, but a #{type toks[1]})"
+				return
+			for t in toks[2..]
+				val = get t
+				# don't append empty arrays
+				continue if val?.length < 1
+				v.push val
+			return v
+		when 'flatten'
+			# recursively flatten array
+			# (from: https://gist.github.com/th507/5158907)
+			eq = (a, b) ->
+				i = Math.max a.length, b.length, 1
+				true while i-- >= 0 && a[i] == b[i]
+				i == -2
+			r = []
+			ary = evaluate toks[1..]
+			while !eq r, ary
+				r = ary
+				ary = [].concat.apply [], ary
+			return ary
 
 	# number or variable
 	if toks.length == 1
 		return get toks[0]
+
+	# negation
+	if toks[0] == 'not'
+		return not evaluate toks[1..]
 
 	# binary operation
 	op1 = get toks[0]
@@ -338,15 +398,18 @@ evaluate = (toks) ->
 	err "Invalid operation: #{toks.join ' '}"
 
 # utils
+htmlify = (str) ->
+	str.replace(/\n/g,'<br>').replace(/\t/g,'&emsp;').replace(/\s/g,'&nbsp;')
+
 err = (msg) ->
-	$out.innerHTML += "<p class='err'>[#{_lineno}] ERR: #{msg}</p>"
+	$out.innerHTML += "<p class='err'>[#{_lineno}] ERR: #{htmlify msg}</p>"
 	$out.innerHTML += "<p class='err'>&emsp;-> <code>#{_program[_lineno-1]}</code></p>"
 
 print = (msg) ->
-	$out.innerHTML += "<p class='out'>#{msg}</p>"
+	$out.innerHTML += "<p class='out'>#{htmlify msg}</p>"
 
 debug = (msg, lv = 1) ->
-	$out.innerHTML += "<p class='debug'>#{msg}</p>" if $debuglv >= lv
+	$out.innerHTML += "<p class='debug'>#{htmlify msg}</p>" if $debuglv >= lv
 
 dump_program = ->
 	console.log "Program:"
