@@ -224,7 +224,11 @@ execute_line = (lineno, line) ->
 		return -1
 
 	if fst == 'say'
-		print dump evaluate tok[1..]
+		expr = evaluate tok[1..]
+		if typeof expr is 'string'
+			print expr
+		else
+			print dump expr
 		return lineno + 1
 
 	if tok[1] == '='
