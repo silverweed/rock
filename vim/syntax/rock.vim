@@ -1,14 +1,14 @@
 " Poképon vim syntax highlighting file
 "
-" by silverweed
-" Jun 2015
+" by Giacomo Parolini
+" Dec 2013
 
 if exists("b:current_syntax")
 	finish
 endif
 
 " Operators
-syn match rockOp /\s\(+\|-\|\/\|\*\|==\|\<\|\>\|ge\|gt\|le\|lt\|is\|isnt\|\<\>\|<=\|>=\|:=\|=\)\s/
+syn match rockOp /\s\(+\|-\|\/\|\*\|==\|<\|>\|ge\|gt\|le\|lt\|is\|isnt\|<>\|<=\|>=\|:=\|=\|\^\)\s/
 syn match rockOp /[\[\]]/
 
 " Comment
@@ -58,3 +58,5 @@ hi link rockParams Identifier
 hi link rockConstant Constant
 
 let b:current_syntax = "rock"
+
+
