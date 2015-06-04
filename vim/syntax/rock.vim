@@ -1,7 +1,7 @@
 " Poképon vim syntax highlighting file
 "
-" by Giacomo Parolini
-" Dec 2013
+" by silverweed
+" Jun 2015
 
 if exists("b:current_syntax")
 	finish
@@ -58,5 +58,3 @@ hi link rockParams Identifier
 hi link rockConstant Constant
 
 let b:current_syntax = "rock"
-
-
