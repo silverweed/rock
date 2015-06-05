@@ -185,14 +185,15 @@ execute_line = (lineno, line) ->
 		# create new context
 		_context.push {}
 		# bind call arguments to function's named parameters (if any)
-		params = {}
-		for i in [0...Math.min _labels[tok[1]].params.length, tok[2..].length]
-			pname = _labels[tok[1]].params[i]
-			pval = get tok[2+i]
-			params[pname] = pval
-			setvar pname, pval, true
+		if _labels[tok[1]].params?
+			params = {}
+			for i in [0...Math.min _labels[tok[1]].params.length, tok[2..].length]
+				pname = _labels[tok[1]].params[i]
+				pval = get tok[2+i]
+				params[pname] = pval
+				setvar pname, pval, true
 		debug "Function call: #{tok[1]}(" +
-			"#{if Object.keys(params).length > 1 then '\n\t\t' else ''}" +
+			"#{if params? and Object.keys(params).length > 1 then '\n\t\t' else ''}" +
 			"#{("#{pn}=#{dump pv}: #{type pv}" for pn, pv of params).join '\n\t\t'})"
 		debug "Creating new context. Current context chain length: #{_context.length}", 2
 		return _labels[tok[1]].lineno
