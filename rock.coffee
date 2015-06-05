@@ -224,13 +224,14 @@ execute_line = (lineno, line) ->
 	if fst == 'die'
 		return -1
 
-	if fst == 'say'
+	if fst == 'say' or fst == 'put'
+		fnc = if fst is 'say' then print else printnb
 		expr = evaluate tok[1..]
 		switch typeof expr
 			when 'string', 'number'
-				print expr
+				fnc expr
 			else
-				print dump expr
+				fnc dump expr
 		return lineno + 1
 
 	if tok[1] == '='
@@ -415,7 +416,10 @@ err = (msg) ->
 	$out.innerHTML += "<p class='err'>&emsp;-> <code>#{_program[_lineno-1]}</code></p>"
 
 print = (msg) ->
-	$out.innerHTML += "<p class='out'>#{htmlify msg}</p>"
+	$out.innerHTML += "#{htmlify msg}<br/>"
+
+printnb = (msg) ->
+	$out.innerHTML += htmlify msg
 
 debug = (msg, lv = 1) ->
 	$out.innerHTML += "<p class='debug'>#{htmlify msg}</p>" if $debuglv >= lv

@@ -18,7 +18,7 @@ syn match rockComment /--.*/ contains=@Spell,rockTodo
 " Buildin / Keywords
 syn keyword rockBuiltin floor append flatten len not
 syn match rockBuiltin "?"
-syn keyword rockKeyword jump jumpif call die del say return
+syn keyword rockKeyword jump jumpif call die del say return put
 
 " Special
 syn match rockSpecial "\$res"

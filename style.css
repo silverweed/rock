@@ -82,6 +82,8 @@ h4 {
 	font-size: small;
 	background: rgba(26,26,26,1);
 	color: #FEFEFE;
+	box-sizing: border-box;
+	padding-left: 4px;
 }
 
 button {
