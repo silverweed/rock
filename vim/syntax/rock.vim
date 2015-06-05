@@ -1,7 +1,7 @@
-" Poképon vim syntax highlighting file
+" Rock vim syntax highlighting file
 "
-" by Giacomo Parolini
-" Dec 2013
+" by silverweed
+" Jun 2015
 
 if exists("b:current_syntax")
 	finish
