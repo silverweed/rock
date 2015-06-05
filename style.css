@@ -73,6 +73,7 @@ h4 {
 
 #output {
 	position: absolute;
+	font-family: monospace;
 	right: 0;
 	width: 50%;
 	height: 90%;

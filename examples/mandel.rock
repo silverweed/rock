@@ -1,0 +1,60 @@
+-- mandelbrot set
+#limit 3000000
+#debug 0
+y := -1.2
+y_loop_begin:
+jumpif y_loop_end y >= 1.2
+x := -2.05
+x_loop_begin:
+	jumpif x_loop_end x >= 0.55
+	zreal := 0
+	zimg := 0
+	i := 0
+inner_loop_begin:
+		jumpif inner_loop_end i is 30
+		call square zreal zimg
+		zreal = $res[0]
+		zimg = $res[1]
+                cond := zreal > 1000
+                cond2 := zimg > 1000
+                cond = cond || cond 2
+                jumpif printhash cond
+		zreal = zreal + x
+		zimg = zimg + y
+		i = i + 1
+		jump inner_loop_begin
+inner_loop_end:
+	call abs zreal zimg
+	jumpif printdot $res < 2
+printhash:
+	put "#
+	jump x_loop_inc
+printdot:
+	put ".
+x_loop_inc:
+	x = x + 0.025
+	jump x_loop_begin
+x_loop_end:
+	say "
+	y = y + 0.04
+	jump y_loop_begin
+y_loop_end:
+
+
+die
+
+-- computes the square of a complex number
+-- (x+iy)^2 = x^2-y^2 + 2ixy
+square: x y
+	real := x ^ 2
+	tmp := y ^ 2
+	real = real - tmp
+	img := 2 * x
+	img = img * y
+	return [real img
+
+-- abs(x+iy) = x^2 + y^2
+abs: x y
+	a := x ^ 2
+	b := y ^ 2
+	return a + b
