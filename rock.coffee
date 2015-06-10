@@ -381,23 +381,25 @@ evaluate = (toks) ->
 			return op1 / op2
 		when '^'
 			return op1 ** op2
+		when 'xor'
+			return op1 ^ op2
 		when '..'
 			return "#{op1} #{op2}"
 		when '&&'
 			return op1 and op2
 		when '||'
 			return op1 or op2
-		when '>', 'gt'
+		when '>'
 			return op1 > op2
 		when '==', 'is'
 			return op1 == op2
-		when '<', 'lt'
+		when '<'
 			return op1 < op2
-		when '<>', 'ne', 'isnt'
+		when '<>', 'isnt'
 			return op1 != op2
-		when '>=', 'ge'
+		when '>='
 			return op1 >= op2
-		when '<=', 'le'
+		when '<='
 			return op1 <= op2
 		when '%'
 			return op1 % op2

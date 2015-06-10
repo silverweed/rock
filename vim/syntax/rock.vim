@@ -8,7 +8,7 @@ if exists("b:current_syntax")
 endif
 
 " Operators
-syn match rockOp /\s\(+\|-\|\/\|\*\|==\|<\|>\|ge\|gt\|le\|lt\|is\|isnt\|<>\|<=\|>=\|:=\|=\|\^\)\s/
+syn match rockOp /\s\(+\|-\|\/\|\*\|==\|<\|>\|xor\|is\|isnt\|<>\|<=\|>=\|:=\|=\|\^\)\s/
 syn match rockOp /[\[\]]/
 
 " Comment
