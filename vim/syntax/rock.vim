@@ -16,7 +16,7 @@ syn keyword rockTodo TODO FIXME XXX contained
 syn match rockComment /--.*/ contains=@Spell,rockTodo
 
 " Buildin / Keywords
-syn keyword rockBuiltin floor append flatten len not
+syn keyword rockBuiltin floor append flatten len not slice
 syn match rockBuiltin "?"
 syn keyword rockKeyword jump jumpif call die del say return put
 
