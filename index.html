@@ -40,12 +40,12 @@
 				other: /\S+/,
 			});
 			// wait for the page to finish loading before accessing the DOM
-			//window.onload = function(){
-			//	// get the textarea
-			//	var textarea = document.getElementById('code');
-			//	// start the decorator
-			//	decorator = new TextareaDecorator(textarea, parser);
-			//};
+			window.onload = function(){
+				// get the textarea
+				var textarea = document.getElementById('code');
+				// start the decorator
+				decorator = new TextareaDecorator(textarea, parser);
+			};
 		</script>
     </head>
     <body>
