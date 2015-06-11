@@ -1,0 +1,23 @@
+#limit 1000
+
+str := "tracynopanicinaponycart
+call palindrome str
+say $res
+die
+
+palindrome: str
+	l := len str
+	jumpif pal_true l < 2
+	fst := str[0]
+	i := l - 1
+	lst := str[i]
+	jumpif pal_false fst isnt lst
+	i = i - 1
+	str := slice str 1 i   
+	call palindrome str
+	return $res
+pal_false:
+	return False
+pal_true:
+	return True
+

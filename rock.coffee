@@ -273,6 +273,7 @@ execute_line = (lineno, line) ->
 # else return the value of the variable 'name'.
 # TODO: also resolve string values
 get = (name) ->
+	return undefined unless name?
 	a = parseFloat name
 	return a if a == a # a is not NaN => a is number
 	m = name.match /([^\[]+)\[(.+)\]/
@@ -357,6 +358,18 @@ evaluate = (toks) ->
 				r = ary
 				ary = [].concat.apply [], ary
 			return ary
+		when 'slice'
+			# slice <array> <begin> [end]
+			str = get toks[1]
+			t = type str
+			if t isnt 'array' and t isnt 'string'
+				err "Cannot slice #{dump toks[1]} (not an array but a #{t})"
+				return
+			b = get toks[2]
+			e = get toks[3]
+			if typeof e is 'number'
+				return str[b..e]
+			return str[b..]
 
 	# number or variable
 	if toks.length == 1
