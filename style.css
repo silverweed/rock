@@ -61,6 +61,7 @@ h4 {
 	margin: auto;
 	border: 1px solid black;
 	background: rgba(0, 0, 0, 0.05);
+	box-sizing: border-box;
 }
 
 #code {
@@ -130,6 +131,12 @@ label[for=verb] {
 	top: 60px;
 	left: 0;
 	width: 50%;
+}
+
+#syntaxwrapper {
+	position: absolute;
+	right: 5px;
+	top: 5px;
 }
 
 p {

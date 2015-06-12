@@ -59,6 +59,10 @@
             <div id='titlewrapper'>
                 <h1>Try Rock!</h1>
                 <h4>v2.0 - <a href='https://github.com/silverweed/rock'>Hosted on GitHub</a></h4>
+                <div id='syntaxwrapper'>
+                    <label for='syntax'>Syntax</label>
+                    <input type='checkbox' id='syntax' value='Syntax' onclick='toggleSyntax()' checked />
+                </div>
             </div>
         </div>
         <div id='wrapper'>
@@ -110,6 +114,7 @@ is_prime_true:
         var $out = document.getElementById('output');
         var verb = document.getElementById('verb');
         var verblb = document.getElementById('verblb');
+        var syntaxb = document.getElementById('syntax');
         function exe() {
             clearOut();
             executeRock($code.value);
@@ -127,6 +132,16 @@ is_prime_true:
         function verbAdj() {
             $debuglv = verb.value;
             verblb.innerHTML = "Verbosity: " + $debuglv;
+        }
+        function toggleSyntax() {
+            var pre = document.getElementsByTagName('pre')[0];
+            if (syntaxb.checked) {
+                pre.style.visibility = '';
+                code.style.color = '';
+            } else {
+                pre.style.visibility = 'hidden';
+                code.style.color = 'rgba(0, 0, 0, 1)';
+            }
         }
         </script>
     </body>

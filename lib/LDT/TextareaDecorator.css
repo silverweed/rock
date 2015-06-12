@@ -26,9 +26,9 @@
 
 .ldt textarea {
 	/* fallback for browsers without rgba */
-	color: transparent !important;
+	color: transparent;
 	/* make sure the alpha is low enough so it doesn't block the output layer */
-	color: rgba(0,0,0,.5) !important;
+	color: rgba(0,0,0,.5);
 }
 
 /* settings you shouldn't play with unless you have a good reason */
