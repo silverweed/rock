@@ -3,50 +3,50 @@
     <head>
         <title>Rock Interpreter</title>
         <script src='rock.js'></script>
-		<link rel="stylesheet" href="lib/LDT/TextareaDecorator.css">
+        <link rel="stylesheet" href="lib/LDT/TextareaDecorator.css">
         <link rel='stylesheet' href='style.css'/>
-		<style>
-			/* highlight styles */
-			.ldt .comment { color: silver; }
-			.ldt .string { color: green; }
-			.ldt .number { color: blue; }
-			/* setting inline-block and margin to avoid misalignment bug in windows */
-			.ldt .keyword { font-weight: bold; display: inline-block; margin-bottom: -1px; }
-			.ldt .variable { color: green; }
-			.ldt .define { color: magenta; }
+        <style>
+            /* highlight styles */
+            .ldt .comment { color: silver; }
+            .ldt .string { color: green; }
+            .ldt .number { color: blue; }
+            /* setting inline-block and margin to avoid misalignment bug in windows */
+            .ldt .keyword { font-weight: bold; display: inline-block; margin-bottom: -1px; }
+            .ldt .variable { color: green; }
+            .ldt .define { color: magenta; }
             .ldt .op { color: gold; }
             .ldt .label { color: red; }
             .ldt .value { color: blue; }
             .ldt .array { color: blue; }
             .ldt .builtin { color: cyan; }
-		</style>
+        </style>
         <script src="lib/LDT/Parser.js"></script> 
         <script src="lib/LDT/TextareaDecorator.js"></script>
-		<script>
-			// generic syntax parser
-			var parser = new Parser({
-				whitespace: /\s+/,
-				comment: /--.*/,
-				string: /"(\\.|[^"\r\n])*"?|'(\\.|[^'\r\n])*'?/,
-				number: /0x[\dA-Fa-f]+|-?(\d+\.?\d*|\.\d+)/,
-				keyword: /(call|del|die|jump|jumpif|put|return|say)(?!\w|=)/,
-				variable: /\$res/,
-				define: /^#.*/,
+        <script>
+            // generic syntax parser
+            var parser = new Parser({
+                whitespace: /\s+/,
+                comment: /--.*/,
+                string: /"(\\.|[^"\r\n])*"?|'(\\.|[^'\r\n])*'?/,
+                number: /0x[\dA-Fa-f]+|-?(\d+\.?\d*|\.\d+)/,
+                keyword: /(call|del|die|jump|jumpif|put|return|say)(?!\w|=)/,
+                variable: /\$res/,
+                define: /^#.*/,
                 op: /(\+|-|\*|\/|%|\^|:=|==|=|<>|<=|>=|<|>|is|isnt|xor|&&|\|\||\.\.) /,
                 label: /[a-zA-Z_][a-zA-Z0-9_]*:/,
                 builtin: /floor|append|flatten|len|not|slice|\?/,
                 value: /True|False|Nil/,
                 array: /\[[0-9]?/,
-				other: /\S+/,
-			});
-			// wait for the page to finish loading before accessing the DOM
-			window.onload = function(){
-				// get the textarea
-				var textarea = document.getElementById('code');
-				// start the decorator
-				decorator = new TextareaDecorator(textarea, parser);
-			};
-		</script>
+                other: /\S+/,
+            });
+            // wait for the page to finish loading before accessing the DOM
+            window.onload = function(){
+                // get the textarea
+                var textarea = document.getElementById('code');
+                // start the decorator
+                decorator = new TextareaDecorator(textarea, parser);
+            };
+        </script>
     </head>
     <body>
         <div id='headerwrapper'>
