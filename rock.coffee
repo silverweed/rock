@@ -140,129 +140,131 @@ execute_line = (lineno, line) ->
 		debug "tokens:"
 		debug "  #{t}" for t in tok
 
-	if fst == 'jump'
-		# unconditional jump (jump label or jump #lineno)
-		fstch = tok[1][0]
-		if fstch == '#'
-			return tonumber tok[1][1..]
-		if fstch == '@'
-			return getvar tok[1][1..]
-		unless _labels[tok[1]]?.lineno?
-			err "Label #{tok[1]} not found!"
-			return
-		debug "Jump to label #{tok[1]} @ line #{_labels[tok[1]].lineno}"
-		return _labels[tok[1]].lineno
-
-	if fst == 'jumpif'
-		# conditional jump (jumpif label expr or jumpif #lineno expr)
-		labelno = 0
-		fstch = tok[1][0]
-		if fstch == '#'
-			labelno = tonumber tok[1][1..]
-		else if fstch == '@'
-			labelno = getvar tok[1][1..]
-		else
+	switch fst
+		when 'jump'
+			# unconditional jump (jump label or jump #lineno)
+			fstch = tok[1][0]
+			if fstch == '#'
+				return tonumber tok[1][1..]
+			if fstch == '@'
+				return getvar tok[1][1..]
 			unless _labels[tok[1]]?.lineno?
 				err "Label #{tok[1]} not found!"
 				return
+			debug "Jump to label #{tok[1]} @ line #{_labels[tok[1]].lineno}"
+			return _labels[tok[1]].lineno
+
+		when 'jumpif'
+			# conditional jump (jumpif label expr or jumpif #lineno expr)
+			labelno = 0
+			fstch = tok[1][0]
+			if fstch == '#'
+				labelno = tonumber tok[1][1..]
+			else if fstch == '@'
+				labelno = getvar tok[1][1..]
 			else
-				labelno = _labels[tok[1]].lineno
-		if evaluate tok[2..]
-			debug "Condition true on jump to label #{tok[1]} @ line #{labelno}"
-			return labelno
-		else
-			debug "Condition false on jump to label #{tok[1]} @ line #{labelno}"
+				unless _labels[tok[1]]?.lineno?
+					err "Label #{tok[1]} not found!"
+					return
+				else
+					labelno = _labels[tok[1]].lineno
+			if evaluate tok[2..]
+				debug "Condition true on jump to label #{tok[1]} @ line #{labelno}"
+				return labelno
+			else
+				debug "Condition false on jump to label #{tok[1]} @ line #{labelno}"
+				return lineno + 1
+	
+		when 'call'
+			# like jump, but also sets variable $ra to (lineno + 1) to provide a return point 
+			# to the subroutine called (this only accepts a label as argument)
+			unless _labels[tok[1]]?.lineno?
+				err "Label #{tok[1]} not found!"
+				return
+			# save return address in current scope
+			setvar '$ra', lineno + 1, true
+			# create new context
+			_context.push {}
+			# bind call arguments to function's named parameters (if any)
+			if _labels[tok[1]].params?
+				params = {}
+				for i in [0...Math.min _labels[tok[1]].params.length, tok[2..].length]
+					pname = _labels[tok[1]].params[i]
+					pval = get tok[2+i]
+					params[pname] = pval
+					setvar pname, pval, true
+			debug "Function call: #{tok[1]}(" +
+				"#{if params? and Object.keys(params).length > 1 then '\n\t\t' else ''}" +
+				"#{("#{pn}=#{dump pv}: #{type pv}" for pn, pv of params).join '\n\t\t'})"
+			debug "Creating new context. Current context chain length: #{_context.length}", 2
+			return _labels[tok[1]].lineno
+
+		when 'del'
+			# delete variable (del a)
+			setvar tok[1], undefined
+			debug "Deleted variable #{tok[1]} from context"
 			return lineno + 1
 	
-	if fst == 'call'
-		# like jump, but also sets variable $ra to (lineno + 1) to provide a return point 
-		# to the subroutine called (this only accepts a label as argument)
-		unless _labels[tok[1]]?.lineno?
-			err "Label #{tok[1]} not found!"
-			return
-		# save return address in current scope
-		setvar '$ra', lineno + 1, true
-		# create new context
-		_context.push {}
-		# bind call arguments to function's named parameters (if any)
-		if _labels[tok[1]].params?
-			params = {}
-			for i in [0...Math.min _labels[tok[1]].params.length, tok[2..].length]
-				pname = _labels[tok[1]].params[i]
-				pval = get tok[2+i]
-				params[pname] = pval
-				setvar pname, pval, true
-		debug "Function call: #{tok[1]}(" +
-			"#{if params? and Object.keys(params).length > 1 then '\n\t\t' else ''}" +
-			"#{("#{pn}=#{dump pv}: #{type pv}" for pn, pv of params).join '\n\t\t'})"
-		debug "Creating new context. Current context chain length: #{_context.length}", 2
-		return _labels[tok[1]].lineno
+		when 'return'
+			if _context.length is 1
+				err "Cannot return from top level!"
+				return
+			# if a return value is set, save it from local context
+			res = if tok.length > 1 then evaluate(tok[1..]) else undefined
+			# delete inmost context
+			_context.pop()
+			debug "Destroying local context. Current context chain length: #{_context.length}", 2
+			ra = getvar('$ra')
+			if ra == undefined
+				err "No return address in current context!"
+				return
+			# set $res to the return value (may be undefined)
+			setvar '$res', res, true
+			return ra
 
-	if fst == 'del'
-		# delete variable (del a)
-		setvar tok[1], undefined
-		debug "Deleted variable #{tok[1]} from context"
-		return lineno + 1
-	
-	if fst == 'return'
-		if _context.length is 1
-			err "Cannot return from top level!"
-			return
-		# if a return value is set, save it from local context
-		res = if tok.length > 1 then evaluate(tok[1..]) else undefined
-		# delete inmost context
-		_context.pop()
-		debug "Destroying local context. Current context chain length: #{_context.length}", 2
-		ra = getvar('$ra')
-		if ra == undefined
-			err "No return address in current context!"
-			return
-		# set $res to the return value (may be undefined)
-		setvar '$res', res, true
-		return ra
+		when 'die'
+			return -1
 
-	if fst == 'die'
-		return -1
+		when'say', 'put'
+			fnc = if fst is 'say' then print else printnb
+			expr = evaluate tok[1..]
+			switch typeof expr
+				when 'string', 'number'
+					fnc expr
+				else
+					fnc dump expr
+			return lineno + 1
 
-	if fst == 'say' or fst == 'put'
-		fnc = if fst is 'say' then print else printnb
-		expr = evaluate tok[1..]
-		switch typeof expr
-			when 'string', 'number'
-				fnc expr
+	switch tok[1]
+		when '='
+			# var (re)assign (a = expr)
+			# check if array assignment
+			m = fst.match /([^\[]+)\[(.+)\]/
+			if m
+				v = getvar m[1]
+				if v instanceof Array
+					i = get m[2]
+					val = evaluate tok[2..]
+					v[i] = val
+					debug "Var reassign: #{m[1]}[#{i}] = #{dump val}: #{type val}"
+				else
+					err "Variable #{m[1]} is not an array, but a #{type v}!"
+					return
 			else
-				fnc dump expr
-		return lineno + 1
-
-	if tok[1] == '='
-		# var (re)assign (a = expr)
-		# check if array assignment
-		m = fst.match /([^\[]+)\[(.+)\]/
-		if m
-			v = getvar m[1]
-			if v instanceof Array
-				i = get m[2]
+				if getvar(fst) == undefined
+					err "Variable #{fst} not in context!"
+					return
 				val = evaluate tok[2..]
-				v[i] = val
-				debug "Var reassign: #{m[1]}[#{i}] = #{dump val}: #{type val}"
-			else
-				err "Variable #{m[1]} is not an array, but a #{type v}!"
-				return
-		else
-			if getvar(fst) == undefined
-				err "Variable #{fst} not in context!"
-				return
-			val = evaluate tok[2..]
-			setvar fst, val
-			debug "Var reassign: #{fst} = #{dump val}: #{type val}"
-		return lineno + 1
+				setvar fst, val
+				debug "Var reassign: #{fst} = #{dump val}: #{type val}"
+			return lineno + 1
 
-	if tok[1] == ':='
-		#var first assign (a := expr) - may shadow a pre-existing variable
-		val = evaluate tok[2..]
-		setvar fst, val, true
-		debug "Var define: #{fst} := #{dump val}: #{type val}"
-		return lineno + 1
+		when ':='
+			#var first assign (a := expr) - may shadow a pre-existing variable
+			val = evaluate tok[2..]
+			setvar fst, val, true
+			debug "Var define: #{fst} := #{dump val}: #{type val}"
+			return lineno + 1
 	
 	err "[aborted] Invalid line: #{line} @ #{lineno}"
 
@@ -308,18 +310,20 @@ dump = (v) ->
 # "string with spaces too
 # variable
 evaluate = (toks) ->
-	# string
-	if toks[0][0] == '"'
-		toks[0] = toks[0][1..]
-		return toks.join ' '
 
-	# array
-	if toks[0][0] == '['
-		toks[0] = toks[0][1..]
-		v = []
-		if toks.join('').length > 0
-			v.push(get tok) for tok in toks
-		return v
+	switch toks[0][0]
+		when '"'
+			# string
+			toks[0] = toks[0][1..]
+			return toks.join ' '
+
+		when '['
+			# array
+			toks[0] = toks[0][1..]
+			v = []
+			if toks.join('').length > 0
+				v.push(get tok) for tok in toks
+			return v
 	
 	# builtin
 	switch toks[0]
