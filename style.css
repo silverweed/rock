@@ -21,6 +21,22 @@ h4 {
 	margin-top: 10px;
 }
 
+#hints {
+	visibility: hidden;
+	z-index: 10;
+	position: absolute;
+	top: 5px;
+	left: 0; right: 0;
+	padding: 10px;
+	margin: auto;
+	width: 80%;
+	background: #333;
+	opacity: 0.95;
+	color: #eee;
+	height: 90%;
+	overflow: auto;
+}
+
 #headerwrapper {
 	position: absolute;
 	top: 0;

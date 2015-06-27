@@ -49,11 +49,11 @@
                 textarea.onkeydown = function (e) {
                     if (e.keyCode === 9) {
                         e.preventDefault();
-			var start = textarea.selectionStart;
-			var end = textarea.selectionEnd;
-                        textarea.value = textarea.value.substring(0, start)
-				+ '\t' + textarea.value.substring(end);
-			textarea.selectionStart = textarea.selectionEnd = start + 1;
+                    var start = textarea.selectionStart;
+                    var end = textarea.selectionEnd;
+                    textarea.value = textarea.value.substring(0, start)
+                        + '\t' + textarea.value.substring(end);
+                        textarea.selectionStart = textarea.selectionEnd = start + 1;
                     }
                 }
             };
@@ -73,6 +73,7 @@
                 <div id='syntaxwrapper'>
                     <label for='syntax'>Syntax</label>
                     <input type='checkbox' id='syntax' value='Syntax' onclick='toggleSyntax()' checked />
+                    <a href='#' onclick='showHints()'>?</a>
                 </div>
             </div>
         </div>
@@ -120,6 +121,66 @@ is_prime_true:
             </div>
             <div id='output'></div>
         </div>
+        <div id='hints'>
+            <button onclick='hideHints()'>Close</button>
+            <p>One statement per line.</p><br/>
+            <p>A <strong>statement</strong> can be:</p>
+            <ul style='text-align:left'>
+                <li>A variable definition: <code>a := 1</code>
+                    <small>(creates new variable in current scope)</small></li>
+                <li>A variable reassign: <code>a = 2</code>
+                    <small>(fails if no symbol <code>a</code> is found in any scope)</small></li>
+                <li>A builtin function call: <code>say "hello world</code></li>
+                <li>A label definition: <code>loop_begin:</code></li>
+                <li>A function definition: <code>square: n</code>
+                    <small>(<code>n</code> is a formal parameter)</small></li>
+            </ul>
+            <p>Builtin function typically accept an expression as their argument.</p>
+            <br/>
+            <p>An <strong>expression</strong> can be:</p>
+            <ul style='text-align:left'>
+                <li>A <em>single</em> arithmetic operation: <code>40 + 2</code></li>
+                <li>A <em>single</em> logical comparison: <code>b is True</code></li>
+                <li>A literal value:</li>
+                <ul>
+                    <li>A number: <code>4.52</code></li>
+                    <li>A string: <code>"hello</code>
+                        <small>(no terminating <code>"</code>)</small></li>
+                    <li>An array: <code>[1 2 3</code>
+                        <small>(arrays are dynamic and can be resized)</small></li>
+                    <li>A variable or constant: <code>Nil</code>
+                        <small>(Uppercase symbols are constant)</small></li>
+                </ul>
+            </ul>
+            <p>Builtins are:</p>
+            <ul style='text-align:left'>
+                <li><strong>floor</strong>: <code>floor 2.4 ; =&gt; 2</code></li>
+                <li><strong>append</strong>: <code>append ary 2 ; =&gt; appends 2 to array ary</code></li>
+                <li><strong>flatten</strong>: flattens an array</li>
+                <li><strong>len</strong>: gives length of an array/string</li>
+                <li><strong>not</strong>: coerces following expr to bool and negates it</li>
+                <li><strong>?</strong>: coerces following expr to bool</li>
+                <li><strong>slice</strong>: <code>slice ary 2 4</code></li>
+                <li><strong>abs</strong>: <code>abs -4 ; =&gt; 4</code></li>
+            </ul>
+            <p>Statement keywords are:</p>
+            <ul style='text-align:left'>
+                <li><strong>call</strong>: <code>call func_name param1 param2...</code>
+                    <small>(result is available in <code>$res</code>)</small></li>
+                <li><strong>del</strong>: <code>del variable</code>
+                    <small>(deletes variable from inmost scope)</small></li>
+                <li><strong>die</strong>: exits program</li>
+                <li><strong>jump</strong>: <code>jump label</code></li>
+                <li><strong>jumpif</strong>: <code>jumpif label expr</code>
+                    <small>(jumps to <code>label</code> if <code>expr</code> evaluates to true)</small></li>
+                <li><strong>put</strong>: <code>put string</code>
+                    <small>(prints <code>string</code> without a newline)</small></li>
+                <li><strong>say</strong>: <code>say string</code>
+                    <small>(prints <code>string</code> with a newline)</small></li>
+                <li><strong>return</strong>: <code>return expr</code>
+                    <small>(returns from a function and stores <code>expr</code> value in <code>$res</code>)</small></li>
+            </ul>
+        </div>
         <script>
         var $code = document.getElementById('code');
         var $out = document.getElementById('output');
@@ -153,6 +214,12 @@ is_prime_true:
                 pre.style.visibility = 'hidden';
                 code.style.color = 'rgba(0, 0, 0, 1)';
             }
+        }
+        function showHints() {
+            document.getElementById('hints').style.visibility = 'visible';
+        }
+        function hideHints() {
+            document.getElementById('hints').style.visibility = 'hidden';
         }
         </script>
     </body>
