@@ -45,6 +45,13 @@
                 var textarea = document.getElementById('code');
                 // start the decorator
                 decorator = new TextareaDecorator(textarea, parser);
+                // allow tabbing
+                textarea.onkeydown = function (e) {
+                    if (e.keyCode === 9) {
+                        e.preventDefault();
+                        textarea.value += '\t';
+                    }
+                }
             };
         </script>
     </head>
