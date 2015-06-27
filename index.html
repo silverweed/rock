@@ -49,7 +49,11 @@
                 textarea.onkeydown = function (e) {
                     if (e.keyCode === 9) {
                         e.preventDefault();
-                        textarea.value += '\t';
+			var start = textarea.selectionStart;
+			var end = textarea.selectionEnd;
+                        textarea.value = textarea.value.substring(0, start)
+				+ '\t' + textarea.value.substring(end);
+			textarea.selectionStart = textarea.selectionEnd = start + 1;
                     }
                 }
             };
