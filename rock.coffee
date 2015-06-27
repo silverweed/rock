@@ -374,6 +374,13 @@ evaluate = (toks) ->
 			if typeof e is 'number'
 				return str[b..e]
 			return str[b..]
+		when 'abs'
+			n = get toks[1]
+			t = type n
+			if t isnt 'number'
+				err "Cannot abs #{dump toks[1]} (not a number but a #{t})"
+				return
+			return Math.abs n
 
 	# number or variable
 	if toks.length == 1
