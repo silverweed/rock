@@ -225,7 +225,7 @@ execute_line = (lineno, line) ->
 		when 'die'
 			return -1
 
-		when'say', 'put'
+		when 'say', 'put'
 			fnc = if fst is 'say' then print else printnb
 			expr = evaluate tok[1..]
 			switch typeof expr
