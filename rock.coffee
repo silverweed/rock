@@ -56,6 +56,7 @@ _context = [STD_CONTEXT]
 # meta variables
 $debuglv = 0
 $maxCycles = 100000
+$asserts = on
 
 # gets variable x from context, starting from the inmost one to the outmost.
 getvar = (x) ->
@@ -129,7 +130,10 @@ meta_directive = (dir, params) ->
 			db = parseInt params[0], 10
 			if db == db
 				$debuglv = db
-				debug "[meta $debuglv set to #{$debuglv}"
+				debug "[meta] $debuglv set to #{$debuglv}"
+		when 'asserts'
+			$asserts = params[0] is 'on'
+			debug "[meta] $asserts set to #{$asserts}"
 
 # executes line #lineno and returns new lineno to execute
 execute_line = (lineno, line) ->
@@ -203,6 +207,12 @@ execute_line = (lineno, line) ->
 			# delete variable (del a)
 			setvar tok[1], undefined
 			debug "Deleted variable #{tok[1]} from context"
+			return lineno + 1
+		
+		when 'assert'
+			if $asserts and not evaluate tok[1..]
+				err "Assertion failed!"
+				return
 			return lineno + 1
 	
 		when 'return'
