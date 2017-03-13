@@ -31,7 +31,7 @@
                 number: /0x[\dA-Fa-f]+|-?(\d+\.?\d*|\.\d+)/,
                 keyword: /(call|del|die|jump|jumpif|put|return|say|assert)(?!\w|=)/,
                 variable: /\$res/,
-                define: /^#.*/,
+                define: /^#(limit|asserts|debug)/,
                 op: /(\+|-|\*|\/|%|\^|:=|==|=|<>|<=|>=|<|>|is|isnt|xor|&&|\|\||\.\.) /,
                 label: /[a-zA-Z_][a-zA-Z0-9_]*:/,
                 builtin: /floor|append|flatten|len|not|slice|\?|abs/,
@@ -45,6 +45,7 @@
                 var textarea = document.getElementById('code');
                 // start the decorator
                 decorator = new TextareaDecorator(textarea, parser);
+		window.ldtTD = decorator;
                 // allow tabbing
                 textarea.onkeydown = function (e) {
                     if (e.keyCode === 9) {
@@ -64,7 +65,7 @@
             <div id='buttons'>
                 <button id='exe' onclick='exe()'>Execute</button>
                 <button id='clear-out' onclick='clearOut()'>Clear Out</button>
-                <button id='clear-in' onclick='clearIn()'>Clear Source</button>
+                <button id='clear-in' onclick='clearCode()'>Clear Code</button>
                 <input onchange='verbAdj()' type='range' min="0" max="3" value="0" id='verb'/>
                 <label for='verb' id='verblb'>Verbosity: 0</label>
             </div>
@@ -136,7 +137,7 @@ is_prime_true:
                 <li>A function definition: <code>square: n</code>
                     <small>(<code>n</code> is a formal parameter)</small></li>
             </ul>
-            <p>Builtin function typically accept an expression as their argument.</p>
+            <p>Builtin functions typically accept an expression as their argument.</p>
             <br/>
             <p>An <strong>expression</strong> can be:</p>
             <ul style='text-align:left'>
@@ -180,6 +181,8 @@ is_prime_true:
                     <small>(prints <code>string</code> with a newline)</small></li>
                 <li><strong>return</strong>: <code>return expr</code>
                     <small>(returns from a function and stores <code>expr</code> value in <code>$res</code>)</small></li>
+                <li><strong>assert</strong>: <code>assert expr</code>
+		    <small>(if the meta directive <code>#asserts</code> is <code>off</code>, does nothing. Else, throws an exception unless <code>expr</code> evaluates to <code>true</code>.)</small></li>
             </ul>
         </div>
         <script>
@@ -201,6 +204,7 @@ is_prime_true:
         }
         function clearCode() {
             $code.value = "";
+            window.ldtTD.update();
         }
         function verbAdj() {
             $debuglv = verb.value;
