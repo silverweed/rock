@@ -1,11 +1,8 @@
 body {
 	height: 100%;
-	overflow: hidden;
-	margin: 1px;
+	overflow: auto;
+	margin: 0px;
 	text-align: center;
-	margin-left: 0;
-	margin-right: 0;
-	margin-top: 0;
 	font-family: 'Source Sans Pro', sans-serif;
 }
 
@@ -50,7 +47,12 @@ h4 {
 	position: absolute;
 	left: 0;
 	height: 100%;
-	width: 250px;
+	width: 300px;
+	display: flex;
+}
+
+#buttons button {
+	width: 90px;
 }
 
 #titlewrapper {
@@ -67,7 +69,7 @@ h4 {
 	bottom: 3%;
 	left: 0;
 	right: 0;
-	height: 90%;
+	height: 85%;
 }
 
 #codewrapper {
@@ -105,30 +107,36 @@ h4 {
 }
 
 button {
-	width: 70px;
 	height: 50px;
 	border: 1px solid #0e63c4;
 	cursor: pointer;
 	transition: background-color 0.1s;
 	font-size: large;
+	align-self: auto;
+	flex-grow: 1;
+}
+
+button.squared {
+	width: 50px;
+}
+
+.bigfont {
+	font-size: 150%;	
 }
 
 button#exe {
-	position: absolute;
 	background-color: #4DDB4D;
 	color: #006600;
-	left: 0;
-	top: 0;
-	width: 50%;
 }
 
-button#clear {
-	position: absolute;
+button#clear-in {
 	background-color: #FF3333;
 	color: #8F0000;
-	right: 0;
-	top: 0;
-	width: 50%;
+}
+
+button#clear-out {
+	background-color: #1472FF;
+	color: #0044aa;
 }
 
 button:hover {
@@ -144,7 +152,7 @@ input#verb {
 
 label[for=verb] {
 	position: absolute;
-	top: 60px;
+	top: 65px;
 	left: 0;
 	width: 50%;
 }

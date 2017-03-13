@@ -63,17 +63,18 @@
         <div id='headerwrapper'>
             <div id='buttons'>
                 <button id='exe' onclick='exe()'>Execute</button>
-                <button id='clear' onclick='clearOut()'>Clear</button>
+                <button id='clear-out' onclick='clearOut()'>Clear Out</button>
+                <button id='clear-in' onclick='clearIn()'>Clear Source</button>
                 <input onchange='verbAdj()' type='range' min="0" max="3" value="0" id='verb'/>
                 <label for='verb' id='verblb'>Verbosity: 0</label>
             </div>
             <div id='titlewrapper'>
                 <h1>Try Rock!</h1>
-                <h4>v2.0 - <a href='https://github.com/silverweed/rock'>Hosted on GitHub</a></h4>
+                <h4>v2.0 - <a href='https://github.com/silverweed/rock'>Source on GitHub</a></h4>
                 <div id='syntaxwrapper'>
                     <label for='syntax'>Syntax</label>
                     <input type='checkbox' id='syntax' value='Syntax' onclick='toggleSyntax()' checked />
-                    <a href='#' onclick='showHints()'>?</a>
+                    <button class='squared bigfont' onclick='showHints()'>?</button>
                 </div>
             </div>
         </div>
