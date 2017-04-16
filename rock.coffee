@@ -42,6 +42,8 @@
 
 # the whole program
 _program = []
+# Array [program line => source code line]
+_programsrclines = []
 # map labels -> { lineno, [param names] }
 # (normal labels have only lineno, functions have also param names)
 _labels = {}
@@ -57,6 +59,9 @@ _context = [STD_CONTEXT]
 $debuglv = 0
 $maxCycles = 100000
 $asserts = on
+# Pragmas:
+#  - permissive: don't die on invalid line
+$pragma = {}
 
 # gets variable x from context, starting from the inmost one to the outmost.
 getvar = (x) ->
@@ -81,23 +86,27 @@ setvar = (x, val, create_new = false) ->
 		_context[_context.length-1][x] = val
 		debug "Created new variable #{x} = #{val} in context ##{_context.length-1}", 2
 
-# current lineno (lines start at 1)
+# current lineno (lines start at 1). This is the program counter, not the source code line.
 _lineno = 1
 
 reset_program = ->
 	_program = []
+	_programsrclines = []
 	_labels = {}
 	_context = [STD_CONTEXT]
 	_lineno = 1
-	console.log "Program reset."
+	debug "Program reset.", 3
 
 # reads the whole program in a table { lineno: line }
 read_program = (input) ->
 	i = 1
+	srcline = -1
 	for line in input.split '\n'
 		line = line.trim()
+		srcline += 1
 		continue if handle_meta line, i
 		_program[i-1] = line
+		_programsrclines[i-1] = srcline
 		i += 1
 
 # skips lines beginning with --, assigns labels to line numbers and reads 
@@ -134,6 +143,14 @@ meta_directive = (dir, params) ->
 		when 'asserts'
 			$asserts = params[0] is 'on'
 			debug "[meta] $asserts set to #{$asserts}"
+		when 'pragma'
+			switch params[0]
+				when 'permissive'
+					debug "[meta] permissive execution enabled"
+					$pragma['permissive'] = on
+				else
+					debug "[meta] unknown pragma: #{params[0]}"
+
 
 # executes line #lineno and returns new lineno to execute
 execute_line = (lineno, line) ->
@@ -211,7 +228,7 @@ execute_line = (lineno, line) ->
 		
 		when 'assert'
 			if $asserts and not evaluate tok[1..]
-				err "Assertion failed!"
+				err "Assertion failed:"
 				return
 			return lineno + 1
 	
@@ -276,9 +293,8 @@ execute_line = (lineno, line) ->
 			debug "Var define: #{fst} := #{dump val}: #{type val}"
 			return lineno + 1
 	
-	err "[aborted] Invalid line: #{line} @ #{lineno}"
-
-	return lineno + 1
+	err "Invalid line:"
+	if $pragma['permissive'] then return lineno + 1 else return -1
 
 # given a literal 'name', resolves it in a value.
 # i.e. - if name is a number, return that number,
@@ -448,7 +464,7 @@ htmlify = (str) ->
 		str
 
 err = (msg) ->
-	$out.innerHTML += "<p class='err'>[#{_lineno}] ERR: #{htmlify msg}</p>"
+	$out.innerHTML += "<p class='err'>[line #{_programsrclines[_lineno]}] ERR: #{htmlify msg}</p>"
 	$out.innerHTML += "<p class='err'>&emsp;-> <code>#{_program[_lineno-1]}</code></p>"
 
 print = (msg) ->
@@ -461,16 +477,16 @@ debug = (msg, lv = 1) ->
 	$out.innerHTML += "<p class='debug'>#{htmlify msg}</p>" if $debuglv >= lv
 
 dump_program = ->
-	console.log "Program:"
-	console.log "[#{i}] #{line}" for i, line of _program
+	debug "Program:", 3
+	debug "[#{i}] #{line}", 3 for i, line of _program
 
 dump_labels = ->
-	console.log "Labels:"
-	console.log "#{label} @ line #{lineno}" for label, lineno of _labels
+	debug "Labels:", 3
+	debug "#{label} @ line #{lineno}", 3 for label, lineno of _labels
 
 dump_context = ->
-	console.log "Context:"
-	console.log "#{x} = #{v}" for x, v of _context[0]
+	debug "Context:", 3
+	debug "#{x} = #{v}", 3 for x, v of _context[0]
 # main
 
 executeRock = (code) ->

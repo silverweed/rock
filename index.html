@@ -20,6 +20,7 @@
             .ldt .value { color: blue; }
             .ldt .array { color: blue; }
             .ldt .builtin { color: cyan; }
+            .ldt .constant { color: lightgreen; font-weight: bold; }
         </style>
         <script src="lib/LDT/Parser.js"></script> 
         <script src="lib/LDT/TextareaDecorator.js"></script>
@@ -32,12 +33,13 @@
                 number: /0x[\dA-Fa-f]+|-?(\d+\.?\d*|\.\d+)/,
                 keyword: /(call|del|die|jump|jumpif|put|return|say|assert)(?!\w|=)/,
                 variable: /\$res/,
-                define: /^#(limit|asserts|debug)/,
+                define: /^#(limit|asserts|debug|pragma)/,
                 op: /(\+|-|\*|\/|%|\^|:=|==|=|<>|<=|>=|<|>|is|isnt|xor|&&|\|\||\.\.) /,
                 label: /[a-zA-Z_][a-zA-Z0-9_]*:/,
                 builtin: /floor|append|flatten|len|not|slice|\?|abs/,
                 value: /True|False|Nil/,
                 array: /\[[0-9]?/,
+                constant: /[A-Z][a-zA-Z_0-9]*/,
                 other: /\S+/,
             });
             // wait for the page to finish loading before accessing the DOM
@@ -132,65 +134,88 @@ is_prime_true:
         </div>
         <div id='hints'>
             <button onclick='hideHints()'>Close</button>
-            <p>One statement per line.</p><br/>
-            <p>A <strong>statement</strong> can be:</p>
-            <ul style='text-align:left'>
-                <li>A variable definition: <code>a := 1</code>
-                    <small>(creates new variable in current scope)</small></li>
-                <li>A variable reassign: <code>a = 2</code>
-                    <small>(fails if no symbol <code>a</code> is found in any scope)</small></li>
-                <li>A builtin function call: <code>say "hello world</code></li>
-                <li>A label definition: <code>loop_begin:</code></li>
-                <li>A function definition: <code>square: n</code>
-                    <small>(<code>n</code> is a formal parameter)</small></li>
-            </ul>
-            <p>Builtin functions typically accept an expression as their argument.</p>
-            <br/>
-            <p>An <strong>expression</strong> can be:</p>
-            <ul style='text-align:left'>
-                <li>A <em>single</em> arithmetic operation: <code>40 + 2</code></li>
-                <li>A <em>single</em> logical comparison: <code>b is True</code></li>
-                <li>A literal value:</li>
-                <ul>
-                    <li>A number: <code>4.52</code></li>
-                    <li>A string: <code>"hello</code>
-                        <small>(no terminating <code>"</code>)</small></li>
-                    <li>An array: <code>[1 2 3</code>
-                        <small>(arrays are dynamic and can be resized)</small></li>
-                    <li>A variable or constant: <code>Nil</code>
-                        <small>(Uppercase symbols are constant)</small></li>
+            <section>
+                <h2>Rock</h2>
+                <h4>a silly toy language by silverweed</h4>
+            </section>
+            <section style='text-align: left;'>
+                <p>One statement per line.</p><br/>
+                <p>A <strong>statement</strong> can be:</p>
+                <ul style='text-align:left'>
+                    <li>A variable definition: <code>a := 1</code>
+                        <small>(creates new variable in current scope)</small></li>
+                    <li>A variable reassign: <code>a = 2</code>
+                        <small>(fails if no symbol <code>a</code> is found in any scope)</small></li>
+                    <li>A builtin function call: <code>say "hello world</code></li>
+                    <li>A label definition: <code>loop_begin:</code></li>
+                    <li>A function definition: <code>square: n</code>
+                        <small>(<code>n</code> is a formal parameter)</small></li>
+                    <li>A meta directive: <code>#debug 0</code></li>
                 </ul>
-            </ul>
-            <p>Builtins are:</p>
-            <ul style='text-align:left'>
-                <li><strong>floor</strong>: <code>floor 2.4 ; =&gt; 2</code></li>
-                <li><strong>append</strong>: <code>append ary 2 ; =&gt; appends 2 to array ary</code></li>
-                <li><strong>flatten</strong>: flattens an array</li>
-                <li><strong>len</strong>: gives length of an array/string</li>
-                <li><strong>not</strong>: coerces following expr to bool and negates it</li>
-                <li><strong>?</strong>: coerces following expr to bool</li>
-                <li><strong>slice</strong>: <code>slice ary 2 4</code></li>
-                <li><strong>abs</strong>: <code>abs -4 ; =&gt; 4</code></li>
-            </ul>
-            <p>Statement keywords are:</p>
-            <ul style='text-align:left'>
-                <li><strong>call</strong>: <code>call func_name param1 param2...</code>
-                    <small>(result is available in <code>$res</code>)</small></li>
-                <li><strong>del</strong>: <code>del variable</code>
-                    <small>(deletes variable from inmost scope)</small></li>
-                <li><strong>die</strong>: exits program</li>
-                <li><strong>jump</strong>: <code>jump label</code></li>
-                <li><strong>jumpif</strong>: <code>jumpif label expr</code>
-                    <small>(jumps to <code>label</code> if <code>expr</code> evaluates to true)</small></li>
-                <li><strong>put</strong>: <code>put string</code>
-                    <small>(prints <code>string</code> without a newline)</small></li>
-                <li><strong>say</strong>: <code>say string</code>
-                    <small>(prints <code>string</code> with a newline)</small></li>
-                <li><strong>return</strong>: <code>return expr</code>
-                    <small>(returns from a function and stores <code>expr</code> value in <code>$res</code>)</small></li>
-                <li><strong>assert</strong>: <code>assert expr</code>
-		    <small>(if the meta directive <code>#asserts</code> is <code>off</code>, does nothing. Else, throws an exception unless <code>expr</code> evaluates to <code>true</code>.)</small></li>
-            </ul>
+                <p>Builtin functions typically accept an expression as their argument.</p>
+                <p>Meta-directives must begin the program.</p>
+                <br/>
+                <p>An <strong>expression</strong> can be:</p>
+                <ul style='text-align:left'>
+                    <li>A <em>single</em> arithmetic operation: <code>40 + 2</code></li>
+                    <li>A <em>single</em> logical comparison: <code>b is True</code></li>
+                    <li>A literal value:</li>
+                    <ul>
+                        <li>A number: <code>4.52</code></li>
+                        <li>A string: <code>"hello</code>
+                            <small>(no terminating <code>"</code>)</small></li>
+                        <li>An array: <code>[1 2 3</code>
+                            <small>(arrays are dynamic and can be resized)</small></li>
+                        <li>A variable or constant: <code>Nil</code>
+                            <small>(Uppercase symbols are constant)</small></li>
+                    </ul>
+                </ul>
+                <p><strong>Builtins</strong> are:</p>
+                <ul style='text-align:left'>
+                    <li><strong>floor</strong>: <code>floor 2.4 ; =&gt; 2</code></li>
+                    <li><strong>append</strong>: <code>append ary 2 ; =&gt; appends 2 to array ary</code></li>
+                    <li><strong>flatten</strong>: flattens an array</li>
+                    <li><strong>len</strong>: gives length of an array/string</li>
+                    <li><strong>not</strong>: coerces following expr to bool and negates it</li>
+                    <li><strong>?</strong>: coerces following expr to bool</li>
+                    <li><strong>slice</strong>: <code>slice ary 2 4</code></li>
+                    <li><strong>abs</strong>: <code>abs -4 ; =&gt; 4</code></li>
+                </ul>
+                <p><strong>Statement keywords</strong> are:</p>
+                <ul style='text-align:left'>
+                    <li><strong>call</strong>: <code>call func_name param1 param2...</code>
+                        <small>(result is available in <code>$res</code>)</small></li>
+                    <li><strong>del</strong>: <code>del variable</code>
+                        <small>(deletes variable from inmost scope)</small></li>
+                    <li><strong>die</strong>: exits program</li>
+                    <li><strong>jump</strong>: <code>jump label</code></li>
+                    <li><strong>jumpif</strong>: <code>jumpif label expr</code>
+                        <small>(jumps to <code>label</code> if <code>expr</code> evaluates to true)</small></li>
+                    <li><strong>put</strong>: <code>put string</code>
+                        <small>(prints <code>string</code> without a newline)</small></li>
+                    <li><strong>say</strong>: <code>say string</code>
+                        <small>(prints <code>string</code> with a newline)</small></li>
+                    <li><strong>return</strong>: <code>return expr</code>
+                        <small>(returns from a function and stores <code>expr</code> value in <code>$res</code>)</small></li>
+                    <li><strong>assert</strong>: <code>assert expr</code>
+                <small>(if the meta directive <code>#asserts</code> is <code>off</code>, does nothing. Else, throws an exception unless <code>expr</code> evaluates to <code>true</code>.)</small></li>
+                </ul>
+                <p><strong>Meta directives</strong> are:</p>
+                <ul style='text-align:left'>
+                    <li><strong>#limit</strong>: <code>#limit 1000</code>
+                        <small>(limits number of cycles the program is allow to perform).</small>
+                    </li>
+                    <li><strong>#debug</strong>: <code>#debug 2</code>
+                        <small>(shows debugging information up to given level, from 0 to 3.)</small>
+                    </li>
+                    <li><strong>#asserts</strong>: <small>if <code>off</code>, disables asserts.</small></li>
+                    <li><strong>#pragma</strong>: <small>enables an execution pragma.</small>
+                        <ul style='font-size: small'>
+                            <li><strong>permissive</strong>: keep running upon encountering an invalid line.</li>
+                        </ul>
+                    </li>
+                </ul>
+            </section>
         </div>
         <script>
         var $code = document.getElementById('code');
