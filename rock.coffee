@@ -39,6 +39,7 @@
  Variables starting with an uppercase letter are constants and cannot be re-assigned
  in the same context (but may be shadowed).
 ###
+'use strict'
 
 # the whole program
 _program = []
@@ -69,6 +70,9 @@ getvar = (x) ->
 		if _context[i].hasOwnProperty x
 			debug "Found variable #{x} in context ##{i}", 2
 			return _context[i][x]
+	if $pragma['undeclared_is_error']
+		err "Undefined variable requested: #{x}"
+		return
 	return undefined
 
 setvar = (x, val, create_new = false) ->
@@ -148,6 +152,12 @@ meta_directive = (dir, params) ->
 				when 'permissive'
 					debug "[meta] permissive execution enabled"
 					$pragma['permissive'] = on
+				when 'show_cycles'
+					debug "[meta] cycles number enabled"
+					$pragma['show_cycles'] = on
+				when 'undeclared_is_error'
+					debug "[meta] error on undeclared var enabled"
+					$pragma['undeclared_is_error'] = on
 				else
 					debug "[meta] unknown pragma: #{params[0]}"
 
@@ -304,6 +314,7 @@ get = (name) ->
 	return undefined unless name?
 	a = parseFloat name
 	return a if a == a # a is not NaN => a is number
+	return name[1..] if name[0] == '"'
 	m = name.match /([^\[]+)\[(.+)\]/
 	if m
 		debug "m: #{m} (1: #{m[1]}, 2: #{m[2]})", 2
@@ -325,6 +336,12 @@ dump = (v) ->
 			s += "#{dump el}, "
 		s = s[0..-3]
 		s += "]"
+		return s
+	if typeof v is 'object'
+		s = "{ "
+		for k, val of v
+			s += "#{k} => #{val}, "
+		s += " }"
 		return s
 	if typeof v is 'string'
 		return "'#{v}'"
@@ -350,11 +367,19 @@ evaluate = (toks) ->
 			if toks.join('').length > 0
 				v.push(get tok) for tok in toks
 			return v
+		when '{'
+			# associative array
+			toks[0] = toks[0][1..]
+			v = {}
+			# TODO literal assignment
+			return v
 	
 	# builtin
 	switch toks[0]
 		when '?'
 			return evaluate(toks[1..]) != undefined
+		when 'strinfigy'
+			return evaluate(toks[1..]).toString()
 		when 'floor'
 			return Math.floor evaluate toks[1..]
 		when 'len'
@@ -407,6 +432,16 @@ evaluate = (toks) ->
 				err "Cannot abs #{dump toks[1]} (not a number but a #{t})"
 				return
 			return Math.abs n
+		when 'assoc'
+			v = get toks[1]
+			if typeof(v) isnt 'object'
+				err "Cannot associate key to non-associative array #{dump toks[1]} (of type #{t})!"
+				return
+			k = get toks[2]
+			val = get toks[3]
+			v[k] = val
+			debug "Assoc #{dump k} => #{dump val}"
+			return v
 
 	# number or variable
 	if toks.length == 1
@@ -445,7 +480,7 @@ evaluate = (toks) ->
 			return op1 == op2
 		when '<'
 			return op1 < op2
-		when '<>', 'isnt'
+		when '<>', 'isnt', '!='
 			return op1 != op2
 		when '>='
 			return op1 >= op2
@@ -453,6 +488,8 @@ evaluate = (toks) ->
 			return op1 <= op2
 		when '%'
 			return op1 % op2
+		when '['
+			return op1[op2]
 
 	err "Invalid operation: #{toks.join ' '}"
 
@@ -503,3 +540,5 @@ executeRock = (code) ->
 			break
 		_lineno = execute_line _lineno, _program[_lineno-1]
 		++cycles
+	if $pragma['show_cycles']
+		debug "Cycles taken: #{cycles}", 0
