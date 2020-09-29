@@ -53,6 +53,7 @@ STD_CONTEXT =
 	'True': true
 	'False': false
 	'Nil': null
+    'NaN': NaN
 
 _context = [STD_CONTEXT]
 
@@ -305,6 +306,9 @@ execute_line = (lineno, line) ->
 
 		when ':='
 			#var first assign (a := expr) - may shadow a pre-existing variable
+            if fst[0] == fst[0].toUpperCase() and STD_CONTEXT.hasOwnProperty(fst))
+                err "Constant #{fst} cannot be assigned it is already defined with value #{STD_CONTEXT[fst]}."
+                return lineno + 1
 			val = evaluate tok[2..]
 			setvar fst, val, true
 			debug "Var define: #{fst} := #{dump val}: #{type val}"
