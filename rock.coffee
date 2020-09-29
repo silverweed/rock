@@ -87,6 +87,9 @@ setvar = (x, val, create_new = false) ->
 				return
 		err "Variable #{x} not found in any context!"
 	else
+		if x[0] != '$' and !$pragma['allow_override_declarations'] and _context[_context.length-1][x]
+			err "Cannot override variable #{x} declared in the same scope!"
+			return
 		_context[_context.length-1][x] = val
 		debug "Created new variable #{x} = #{val} in context ##{_context.length-1}", 2
 
@@ -97,8 +100,9 @@ reset_program = ->
 	_program = []
 	_programsrclines = []
 	_labels = {}
-	_context = [STD_CONTEXT]
+	_context = [Object.assign({}, STD_CONTEXT)]
 	_lineno = 1
+	$pragma = {}
 	debug "Program reset.", 3
 
 # reads the whole program in a table { lineno: line }
@@ -158,6 +162,9 @@ meta_directive = (dir, params) ->
 				when 'undeclared_is_error'
 					debug "[meta] error on undeclared var enabled"
 					$pragma['undeclared_is_error'] = on
+				when 'allow_override_declarations'
+					debug "[meta] Enabling declaration overriding"
+					$pragma['allow_override_declarations'] = on
 				else
 					debug "[meta] unknown pragma: #{params[0]}"
 
